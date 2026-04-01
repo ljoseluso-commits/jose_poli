@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Portafolio</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS desde CDN (sin instalar nada) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Configuración de Tailwind: aquí extendemos los colores y fuentes -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            fondo:     '#0f0f13',
+            superficie:'#1a1a24',
+            acento:    '#f0c040',
+            suave:     '#888899',
+          },
+          fontFamily: {
+            titulo: ['Syne', 'sans-serif'],
+            codigo: ['"Space Mono"', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- p5.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+  <!-- Estilos mínimos que Tailwind no puede hacer solo -->
+  <style>
+    body { font-family: 'Space Mono', monospace; }
+    h1, h2, .font-titulo { font-family: 'Syne', sans-serif; }
+
+    /* Scroll suave */
+    html { scroll-behavior: smooth; }
+
+    /* Animación fade-in para las tarjetas */
+    .tarjeta {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .tarjeta.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body class="bg-fondo text-gray-100">
+
+  <!-- ===================== HERO ===================== -->
+  <header class="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+    <!-- Canvas de p5.js (fondo animado) -->
+    <div id="canvas-container" class="absolute inset-0 z-0"></div>
+
+    <!-- Contenido sobre el canvas -->
+    <div class="relative z-10 text-center px-6">
+      <p class="text-acento text-xs font-codigo tracking-widest uppercase mb-3">
+        Hola, soy
+      </p>
+
+      <h1 id="nombre"
+          class="font-titulo font-extrabold text-white leading-none mb-4"
+          style="font-size: clamp(3rem, 10vw, 7rem)">
+        Jose Luis Lozano
+      </h1>
+
+      <p class="text-suave text-base mb-10 font-codigo">
+        Diseñador/a Web · Creador/a Digital
+      </p>
+
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="#proyectos"
+           class="bg-acento text-black font-bold font-codigo text-sm px-8 py-3 rounded
+                  hover:bg-white transition-all hover:-translate-y-1">
+          Ver proyectos
+        </a>
+        <a href="#contacto"
+           class="border-2 border-acento text-acento font-codigo text-sm px-8 py-3 rounded
+                  hover:bg-acento hover:text-black transition-all hover:-translate-y-1">
+          Contáctame
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== SOBRE MÍ ===================== -->
+  <section id="sobre-mi" class="py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+
+      <h2 class="font-titulo font-extrabold text-4xl mb-2">Sobre mí</h2>
+      <div class="w-14 h-1 bg-acento mb-6"></div>
+
+      <p class="text-suave text-base leading-relaxed max-w-2xl mb-8 font-codigo">
+        Soy estudiante de diseño web apasionado/a por crear experiencias
+        digitales únicas. Me interesa combinar el diseño visual con la
+        programación creativa para construir proyectos que cuenten historias.
+      </p>
+
+      <!-- Tags de habilidades -->
+      <div class="flex flex-wrap gap-3">
+        <span class="bg-yellow-400/10 text-acento border border-yellow-400/30
+                     px-4 py-1 rounded-full text-sm font-codigo">HTML</span>
+        <span class="bg-yellow-400/10 text-acento border border-yellow-400/30
+                     px-4 py-1 rounded-full text-sm font-codigo">CSS</span>
+        <span class="bg-yellow-400/10 text-acento border border-yellow-400/30
+                     px-4 py-1 rounded-full text-sm font-codigo">Tailwind</span>
+        <span class="bg-yellow-400/10 text-acento border border-yellow-400/30
+                     px-4 py-1 rounded-full text-sm font-codigo">p5.js</span>
+        <span class="bg-yellow-400/10 text-acento border border-yellow-400/30
+                     px-4 py-1 rounded-full text-sm font-codigo">JavaScript</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PROYECTOS ===================== -->
+  <section id="proyectos" class="py-20 px-6 bg-superficie">
+    <div class="max-w-4xl mx-auto">
+
+      <h2 class="font-titulo font-extrabold text-4xl mb-2">Mis Proyectos</h2>
+      <div class="w-14 h-1 bg-acento mb-10"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Tarjeta 1 -->
+        <div class="tarjeta bg-fondo rounded-lg overflow-hidden border border-white/10
+                    hover:-translate-y-1 hover:border-acento transition-all duration-200">
+          <div class="h-40 flex items-center justify-center text-5xl bg-yellow-400/20">
+            🎨
+          </div>
+          <div class="p-6">
+            <h3 class="font-titulo font-bold text-lg mb-2">Proyecto 1</h3>
+            <p class="text-suave text-sm mb-4 font-codigo leading-relaxed">
+              Descripción breve de lo que hiciste y qué tecnologías usaste.
+
+            <a href="primera_galaxia\index01.html"
+               class="text-acento text-sm font-bold font-codigo
+                      hover:tracking-wide transition-all">
+              Ver proyecto →
+            </a>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2 -->
+        <div class="tarjeta bg-fondo rounded-lg overflow-hidden border border-white/10
+                    hover:-translate-y-1 hover:border-acento transition-all duration-200">
+          <div class="h-40 flex items-center justify-center text-5xl bg-emerald-400/20">
+            💻
+          </div>
+          <div class="p-6">
+            <h3 class="font-titulo font-bold text-lg mb-2">Proyecto 2</h3>
+            <p class="text-suave text-sm mb-4 font-codigo leading-relaxed">
+              Descripción breve de lo que hiciste y qué tecnologías usaste.
+            </p>
+            <a href="#"
+               class="text-acento text-sm font-bold font-codigo
+                      hover:tracking-wide transition-all">
+              Ver proyecto →
+            </a>
+          </div>
+        </div>
+
+        <!-- Tarjeta 3 -->
+        <div class="tarjeta bg-fondo rounded-lg overflow-hidden border border-white/10
+                    hover:-translate-y-1 hover:border-acento transition-all duration-200">
+          <div class="h-40 flex items-center justify-center text-5xl bg-purple-400/20">
+            ✨
+          </div>
+          <div class="p-6">
+            <h3 class="font-titulo font-bold text-lg mb-2">Proyecto 3</h3>
+            <p class="text-suave text-sm mb-4 font-codigo leading-relaxed">
+              Descripción breve de lo que hiciste y qué tecnologías usaste.
+            </p>
+            <a href="#"
+               class="text-acento text-sm font-bold font-codigo
+                      hover:tracking-wide transition-all">
+              Ver proyecto →
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CANVAS INTERACTIVO ===================== -->
+  <section id="canvas-demo" class="py-20 px-6">
+    <div class="max-w-4xl mx-auto">
+
+      <h2 class="font-titulo font-extrabold text-4xl mb-2">Canvas interactivo</h2>
+      <div class="w-14 h-1 bg-acento mb-4"></div>
+
+      <p class="text-suave text-sm mb-6 font-codigo">
+        Mueve el mouse sobre el canvas. ¡Está hecho con p5.js!
+      </p>
+
+      <!-- Contenedor del canvas -->
+      <div id="canvas-demo-container"
+           class="border-2 border-acento/30 rounded-lg overflow-hidden mb-6">
+      </div>
+
+      <!-- Botones -->
+      <div class="flex gap-4 flex-wrap">
+        <button id="btn-color"
+                class="bg-acento text-black font-bold font-codigo text-sm px-6 py-3 rounded
+                       hover:bg-white transition-all hover:-translate-y-0.5 cursor-pointer">
+          Cambiar color
+        </button>
+        <button id="btn-limpiar"
+                class="border-2 border-acento text-acento font-codigo text-sm px-6 py-3 rounded
+                       hover:bg-acento hover:text-black transition-all hover:-translate-y-0.5 cursor-pointer">
+          Limpiar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONTACTO ===================== -->
+  <section id="contacto" class="py-20 px-6 bg-superficie text-center">
+    <div class="max-w-xl mx-auto">
+
+      <h2 class="font-titulo font-extrabold text-4xl mb-2">¿Hablamos?</h2>
+      <div class="w-14 h-1 bg-acento mx-auto mb-6"></div>
+
+      <p class="text-suave text-sm mb-8 font-codigo leading-relaxed">
+        Estoy disponible para proyectos, colaboraciones o simplemente
+        charlar sobre diseño.
+      </p>
+
+      <a href="mailto:tuemail@ejemplo.com"
+         class="bg-acento text-black font-bold font-codigo text-sm px-8 py-3 rounded
+                hover:bg-white transition-all hover:-translate-y-1 inline-block">
+        Enviar mensaje
+      </a>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="text-center py-8 text-suave text-xs font-codigo
+                 border-t border-white/5">
+    Hecho con HTML, Tailwind y p5.js · <span id="year"></span>
+  </footer>
+
+  <!-- p5.js y lógica JS -->
+  <script src="js/sketch.js"></script>
+
+</body>
+</html>
