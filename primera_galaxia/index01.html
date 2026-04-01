@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Cosmos</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        surface: '#0a0612',
+                        primary: '#deb7ff',
+                        'on-surface': '#eaddff',
+                        'surface-variant': '#1e1333'
+                    },
+                    fontFamily: {
+                        display: ['Syne', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- p5.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
+
+    <style>
+        * { cursor: none !important; }
+
+        body {
+            font-family: 'Syne', sans-serif;
+            background: #0a0612;
+        }
+
+        /* Cursor personalizado */
+        #custom-cursor {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background: #deb7ff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 16px 4px rgba(222,183,255,0.7);
+            transition: transform 0.08s ease, opacity 0.2s;
+            mix-blend-mode: screen;
+        }
+        #custom-cursor.clicking {
+            transform: translate(-50%, -50%) scale(2.2);
+            opacity: 0.7;
+        }
+
+        /* Canvas p5 */
+        #p5-container canvas {
+            display: block;
+        }
+
+        /* Card glassmorphism */
+        .glass-card {
+            background: rgba(30, 19, 51, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(222, 183, 255, 0.15);
+            box-shadow: 0 0 40px rgba(123, 44, 191, 0.18), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        /* Botones de color */
+        .color-btn {
+            transition: all 0.22s cubic-bezier(.4,0,.2,1);
+            position: relative;
+            overflow: hidden;
+        }
+        .color-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: rgba(255,255,255,0.08);
+        }
+        .color-btn:hover::after { opacity: 1; }
+        .color-btn:hover {
+            transform: translateY(-2px) scale(1.03);
+        }
+        .color-btn.active {
+            box-shadow: 0 0 18px 4px var(--btn-glow);
+            border-color: var(--btn-border) !important;
+        }
+
+        /* Stats número */
+        .stat-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #deb7ff;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        /* Title glow */
+        .title-glow {
+            text-shadow: 0 0 40px rgba(222,183,255,0.5), 0 0 80px rgba(180,100,255,0.25);
+        }
+
+        /* Animación de entrada */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.7s cubic-bezier(.4,0,.2,1) both; }
+        .delay-1 { animation-delay: 0.12s; }
+        .delay-2 { animation-delay: 0.24s; }
+        .delay-3 { animation-delay: 0.36s; }
+
+        /* Badge de estado FPS */
+        .fps-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-on-surface min-h-screen overflow-x-hidden">
+
+    <!-- Cursor personalizado -->
+    <div id="custom-cursor"></div>
+
+    <!-- Canvas p5.js (fondo fijo) -->
+    <div id="p5-container" class="fixed inset-0 -z-10"></div>
+
+    <!-- Contenido principal -->
+    <main class="relative z-10 container mx-auto px-6 py-12
+                 min-h-screen flex flex-col items-center justify-center">
+
+        <div class="max-w-2xl w-full space-y-6">
+
+            <!-- HEADER -->
+            <div class="text-center space-y-3 fade-up">
+                <h1 class="text-6xl md:text-8xl font-display font-extrabold text-primary title-glow tracking-tight">
+                    Cosmos
+                </h1>
+                <p class="text-sm font-mono text-on-surface/50 tracking-widest uppercase">
+                    Click para crear estrellas · Elige un color
+                </p>
+            </div>
+
+            <!-- CARD CONTROLES -->
+            <div class="glass-card rounded-2xl p-7 fade-up delay-1">
+
+                <div class="flex items-center justify-between mb-5">
+                    <h2 class="text-xl font-display font-bold text-primary">Controles</h2>
+                    <span id="active-color-label"
+                          class="fps-badge px-3 py-1 bg-primary/15 text-primary rounded-full">
+                        ● Blanco activo
+                    </span>
+                </div>
+
+                <!-- Botones de color -->
+                <div class="grid grid-cols-2 gap-3" id="color-btns">
+
+                    <button onclick="changeColor('red')" id="btn-red"
+                            class="color-btn p-4 rounded-xl bg-red-500/15 border border-red-500/30 text-left"
+                            style="--btn-glow: rgba(239,68,68,0.5); --btn-border: rgba(239,68,68,0.7)">
+                        <span class="font-display font-bold text-red-300 text-sm">★ Rojo</span>
+                        <p class="text-xs text-red-300/50 mt-0.5 font-mono">Nebulosa</p>
+                    </button>
+
+                    <button onclick="changeColor('teal')" id="btn-teal"
+                            class="color-btn p-4 rounded-xl bg-teal-500/15 border border-teal-500/30 text-left"
+                            style="--btn-glow: rgba(20,184,166,0.5); --btn-border: rgba(20,184,166,0.7)">
+                        <span class="font-display font-bold text-teal-300 text-sm">★ Teal</span>
+                        <p class="text-xs text-teal-300/50 mt-0.5 font-mono">Aurora</p>
+                    </button>
+
+                    <button onclick="changeColor('yellow')" id="btn-yellow"
+                            class="color-btn p-4 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-left"
+                            style="--btn-glow: rgba(234,179,8,0.5); --btn-border: rgba(234,179,8,0.7)">
+                        <span class="font-display font-bold text-yellow-300 text-sm">★ Amarillo</span>
+                        <p class="text-xs text-yellow-300/50 mt-0.5 font-mono">Solar</p>
+                    </button>
+
+                    <button onclick="changeColor('purple')" id="btn-purple"
+                            class="color-btn p-4 rounded-xl bg-purple-500/15 border border-purple-500/30 text-left"
+                            style="--btn-glow: rgba(168,85,247,0.5); --btn-border: rgba(168,85,247,0.7)">
+                        <span class="font-display font-bold text-purple-300 text-sm">★ Violeta</span>
+                        <p class="text-xs text-purple-300/50 mt-0.5 font-mono">Cosmos</p>
+                    </button>
+
+                </div>
+
+                <!-- Reset -->
+                <button onclick="changeColor('white')" id="btn-white"
+                        class="color-btn mt-3 w-full p-3 rounded-xl bg-white/5 border border-white/15 text-center"
+                        style="--btn-glow: rgba(255,255,255,0.3); --btn-border: rgba(255,255,255,0.5)">
+                    <span class="font-display font-bold text-white/60 text-sm">↺ Blanco (default)</span>
+                </button>
+            </div>
+
+            <!-- STATS -->
+            <div class="grid grid-cols-3 gap-3 fade-up delay-2">
+
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="stat-val" id="stat-stars">0</p>
+                    <p class="text-xs text-on-surface/40 uppercase tracking-widest mt-1 font-mono">Estrellas</p>
+                </div>
+
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="stat-val" id="stat-fps">--</p>
+                    <p class="text-xs text-on-surface/40 uppercase tracking-widest mt-1 font-mono">FPS</p>
+                </div>
+
+                <div class="glass-card rounded-xl p-4 text-center overflow-hidden">
+                    <p class="stat-val text-sm leading-tight" id="stat-pos" style="font-size:0.95rem">0, 0</p>
+                    <p class="text-xs text-on-surface/40 uppercase tracking-widest mt-1 font-mono">Posición</p>
+                </div>
+
+            </div>
+
+            <!-- Tip -->
+            <p class="text-center text-xs text-on-surface/25 font-mono fade-up delay-3">
+                Haz click en cualquier parte del fondo para generar estrellas
+            </p>
+
+        </div>
+    </main>
+
+    <!-- ===================== p5.js SKETCH ===================== -->
+    <script>
+    // ── Globals expuestos al HTML ──────────────────────────────────
+    let currentColor = 'white';
+
+    function changeColor(c) {
+        currentColor = c;
+        // Actualizar estilos activos de botones
+        const labels = {
+            red:    '● Rojo activo',
+            teal:   '● Teal activo',
+            yellow: '● Amarillo activo',
+            purple: '● Violeta activo',
+            white:  '● Blanco activo'
+        };
+        document.getElementById('active-color-label').textContent = labels[c] || '● Activo';
+
+        // Quitar clase active de todos
+        ['red','teal','yellow','purple','white'].forEach(id => {
+            const el = document.getElementById('btn-' + id);
+            if (el) el.classList.remove('active');
+        });
+        const active = document.getElementById('btn-' + c);
+        if (active) active.classList.add('active');
+    }
+
+    // ── Cursor personalizado ──────────────────────────────────────
+    const cursorEl = document.getElementById('custom-cursor');
+    document.addEventListener('mousemove', e => {
+        cursorEl.style.left = e.clientX + 'px';
+        cursorEl.style.top  = e.clientY + 'px';
+    });
+    document.addEventListener('mousedown', () => cursorEl.classList.add('clicking'));
+    document.addEventListener('mouseup',   () => cursorEl.classList.remove('clicking'));
+
+    // ── p5.js SKETCH ──────────────────────────────────────────────
+    new p5(function(p) {
+
+        // ----- Paleta de colores -----
+        const PALETTE = {
+            white:  [255, 255, 255],
+            red:    [255, 100, 110],
+            teal:   [80,  220, 200],
+            yellow: [255, 220,  70],
+            purple: [190, 120, 255]
+        };
+
+        // ----- Clase Star (estrellas de fondo) -----
+        class Star {
+            constructor() { this.reset(true); }
+
+            reset(init) {
+                this.x    = p.random(p.width);
+                this.y    = p.random(p.height);
+                this.size = p.random(0.5, 2.5);
+                this.base = p.random(100, 255);
+                this.speed = p.random(0.5, 2.5);
+                this.offset = p.random(1000);
+                // Arrancar en fase aleatoria para que no parpaden todas juntas
+                if (init) this.offset = p.random(1000);
+            }
+
+            draw() {
+                const blink = p.map(
+                    p.sin(p.frameCount * 0.025 * this.speed + this.offset),
+                    -1, 1, 60, this.base
+                );
+                p.noStroke();
+                p.fill(255, 255, 255, blink);
+                p.circle(this.x, this.y, this.size);
+            }
+        }
+
+        // ----- Clase ClickStar (estrellas al hacer click) -----
+        class ClickStar {
+            constructor(x, y, col) {
+                this.x   = x;
+                this.y   = y;
+                this.col = col.slice(); // copia del array RGB
+                this.vx  = p.random(-2, 2);
+                this.vy  = p.random(-2.5, -0.5);
+                this.size = p.random(2, 5);
+                this.life = 255;
+                this.decay = p.random(2.5, 5);
+                this.alive = true;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.04; // gravedad suave
+                this.life -= this.decay;
+                if (this.life <= 0) this.alive = false;
+            }
+
+            draw() {
+                p.noStroke();
+                p.fill(this.col[0], this.col[1], this.col[2], this.life);
+                // Destello pequeño
+                p.fill(255, 255, 255, this.life * 0.4);
+                p.circle(this.x, this.y, this.size * 0.5);
+                p.fill(this.col[0], this.col[1], this.col[2], this.life);
+                p.circle(this.x, this.y, this.size);
+            }
+        }
+
+        // ----- Variables -----
+        let bgStars   = [];
+        let clickStars = [];
+        let domUpdateCounter = 0;
+
+        // ----- Setup -----
+        p.setup = function() {
+            const container = document.getElementById('p5-container');
+            const cnv = p.createCanvas(window.innerWidth, window.innerHeight);
+            cnv.parent('p5-container');
+
+            // 100 estrellas de fondo
+            for (let i = 0; i < 100; i++) bgStars.push(new Star());
+
+            p.colorMode(p.RGB, 255);
+        };
+
+        // ----- Draw -----
+        p.draw = function() {
+            p.background(10, 6, 18, 255);
+
+            // Fondo starfield
+            bgStars.forEach(s => s.draw());
+
+            // Click stars
+            clickStars = clickStars.filter(s => s.alive); // eliminar muertas
+            clickStars.forEach(s => { s.update(); s.draw(); });
+
+            // Cursor glow suave (sólo si el mouse está dentro del canvas)
+            if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
+                const col = PALETTE[currentColor] || PALETTE.white;
+                p.noFill();
+                p.stroke(col[0], col[1], col[2], 30);
+                p.strokeWeight(1);
+                p.circle(p.mouseX, p.mouseY, 38);
+                p.stroke(col[0], col[1], col[2], 12);
+                p.circle(p.mouseX, p.mouseY, 70);
+            }
+
+            // Actualizar DOM cada 6 frames (no cada frame)
+            domUpdateCounter++;
+            if (domUpdateCounter >= 6) {
+                domUpdateCounter = 0;
+                const total = 100 + clickStars.length;
+                document.getElementById('stat-stars').textContent = total;
+                document.getElementById('stat-fps').textContent   = Math.round(p.frameRate());
+                document.getElementById('stat-pos').textContent   = Math.round(p.mouseX) + ', ' + Math.round(p.mouseY);
+            }
+        };
+
+        // ----- Mouse click → crear estrellas -----
+        p.mousePressed = function() {
+            // Sólo si el click es sobre el canvas (no sobre la UI)
+            if (p.mouseX < 0 || p.mouseX > p.width ||
+                p.mouseY < 0 || p.mouseY > p.height) return;
+
+            // Verificar que no sea sobre la UI (main)
+            const el = document.elementFromPoint(p.mouseX, p.mouseY);
+            if (el && el !== document.getElementById('p5-container') &&
+                !el.closest('#p5-container')) {
+                return; // click en la UI → no crear
+            }
+
+            const col = PALETTE[currentColor] || PALETTE.white;
+            const burst = Math.floor(p.random(12, 22));
+            for (let i = 0; i < burst; i++) {
+                clickStars.push(new ClickStar(p.mouseX, p.mouseY, col));
+            }
+        };
+
+        // ----- Resize -----
+        p.windowResized = function() {
+            p.resizeCanvas(window.innerWidth, window.innerHeight);
+        };
+
+    }); // fin new p5
+    </script>
+
+</body>
+</html>
